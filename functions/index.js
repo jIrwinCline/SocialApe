@@ -62,6 +62,18 @@ app.post('/scream',(req, res) => {
 
 });
 
+const isEmail = (email) => {
+  const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  if(email.match(regEx)) return true;
+  else return false;
+}
+
+const isEmpty = (string) => {
+  if(string.trim() === '') return true;
+  else return false;
+}
+
+// Signup route
 app.post('/signup', (req, res) => {
   const newUser = {
     email: req.body.email,
@@ -70,7 +82,25 @@ app.post('/signup', (req, res) => {
     handle: req.body.handle
 
   };
+
+  let errors = {};
+
+
+  if (isEmpty(newUser.email)) {
+    errors.email = 'Must not be empty'
+  } else if(!isEmail(newUser.email)){
+    errors.email = 'Must be valid email'
+  }
+
+  if(isEmpty(newUser.password)) errors.password = 'Must not be an empty password';
+  if(newUser.password !== newUser.confirmPassword) errors.confirmPassword = 'Passwords must match';
+  if (isEmpty(newUser.handle))
+    errors.handle = "Must not be an empty handle";
+
+  if(Object.keys(errors).length > 0 ) return res.status(400).json(errors);
+
   // validate data
+  let token, userId
   db.doc(`/users/${newUser.handle}`).get()
   .then(doc => {
     if(doc.exists){
@@ -82,9 +112,20 @@ app.post('/signup', (req, res) => {
     }
   })
   .then(data => {
+    userId = data.user.uid;
     return data.user.getIdToken();
   })
-  .then(token => {
+  .then(idToken => {
+    token = idToken;
+    const userCredentials = {
+      handle: newUser.handle,
+      email: newUser.email,
+      createdAt:new Date().toISOString(),
+      userId
+    };
+    return db.doc(`/users/${newUser.handle}`).set(userCredentials);
+  })
+  .then((data) => {
     return res.status(201).json({ token });
   })
   .catch(err => {
@@ -97,13 +138,18 @@ app.post('/signup', (req, res) => {
   })
 })
 
+app.post('/login', (req,res) => {
+  const user = {
+    email: req.body.email,
+    password: req.body.password
+  };
 
-  // firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
-  //   .then(data => {
-  //       return res.status(201).json({ message: `user ${data.user.uid} signed up successfully`})
-  //   })
-  //   .catch(err => {
-  //       console.error(err)
-  //       return res.status(500).json({ error: err.code })
-  //   })
+  let errors = {};
+
+  if(isEmpty(user.email)) errors.email = 'Must not be empty';
+  if(isEmpty(user.password)) errors.password = "Must not be empty";
+
+  
+})
+
 exports.api = functions.https.onRequest(app);
