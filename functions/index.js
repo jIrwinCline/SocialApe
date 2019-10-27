@@ -1,12 +1,23 @@
 const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 
+const app = require("express")();
 admin.initializeApp();
 
-const express = require('express');
-const app = express();
 
+const firebaseConfig = {
+    apiKey: "AIzaSyAu3v6wkSPjN1z8HFc5ebK6nQG1-5qIxFo",
+    authDomain: "socialastro-e714b.firebaseapp.com",
+    databaseURL: "https://socialastro-e714b.firebaseio.com",
+    projectId: "socialastro-e714b",
+    storageBucket: "socialastro-e714b.appspot.com",
+    messagingSenderId: "873071197018",
+    appId: "1:873071197018:web:a2635b64e476f3345c5163",
+    measurementId: "G-YY80FNEZXJ"
+  };
 
+const firebase = require('firebase')
+firebase.initializeApp(firebaseConfig)
 
 
 app.get('/screams', (req, res) => {
@@ -49,5 +60,25 @@ app.post('/scream',(req, res) => {
         })
 
 });
+
+app.post('/signup', (req, res) => {
+    const newUser = {
+      email: req.body.email,
+      password: req.body.pasword,
+      confirmPassword: req.body.confirmPassword,
+      handle: req.body.handle
+
+    };
+    // TODO validate data
+
+    firebase.auth().createUserWithEmailAndPassword(newUser.email, newUser.password)
+        .then(data => {
+            return res.status(201).json({ message: `user ${data.user.uid} signed up successfully`})
+        })
+        .catch(err => {
+            console.log(err)
+            return res.status(500).json({ error: err.code})
+        })
+})
 
 exports.api = functions.https.onRequest(app);
