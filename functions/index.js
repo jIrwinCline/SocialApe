@@ -4,6 +4,7 @@ const admin = require('firebase-admin');
 const app = require("express")();
 admin.initializeApp();
 
+const {getAllScreams} = require('./handlers/screams')
 
 const firebaseConfig = {
     apiKey: "AIzaSyAu3v6wkSPjN1z8HFc5ebK6nQG1-5qIxFo",
@@ -21,26 +22,10 @@ firebase.initializeApp(firebaseConfig)
 
 const db = admin.firestore();
 
-
-app.get('/screams', (req, res) => {
-      db
-        .collection("screams")
-        .orderBy('createdAt', 'desc')
-        .get()
-        .then(data => {
-          let screams = [];
-          data.forEach(doc => {
-            screams.push({
-                screamId: doc.id,
-                body: doc.data().body,
-                userHandle: doc.data().userHandle,
-                createdAt: doc.data().createdAt
-            });
-          });
-          return res.json(screams);
-        })
-        .catch(err => console.error(err));
-})
+// Screams routes
+app.get('/screams', getAllScreams )
+// put one scream
+app.post('/scream', FBAuth, postOneScream);
 
 const FBAuth = (req, res, next) => {
   let idToken;
@@ -69,26 +54,7 @@ const FBAuth = (req, res, next) => {
     })
 }
 
-// put one scream
-app.post('/scream', FBAuth, (req, res) => {
 
-    const newScream = {
-        body: req.body.body,
-        userHandle: req.user.handle,
-        createdAt: new Date().toISOString()
-    };
-
-    db.collection('screams')
-        .add(newScream)
-        .then(doc => {
-            res.json({ message: `document ${doc.id} created successfully`});
-        })
-        .catch(err => {
-            res.status(500).json({ error: 'something went wrong'})
-            console.error(err);
-        })
-
-});
 
 const isEmail = (email) => {
   const regEx = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
