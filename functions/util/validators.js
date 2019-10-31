@@ -14,15 +14,15 @@ exports.validateSignupData = (data) => {
 let errors = {};
 
 
-  if (isEmpty(newUser.email)) {
+  if (isEmpty(data.email)) {
     errors.email = 'Must not be empty'
-  } else if(!isEmail(newUser.email)){
+  } else if(!isEmail(data.email)){
     errors.email = 'Must be valid email'
   }
 
-  if(isEmpty(newUser.password)) errors.password = 'Must not be an empty password';
-  if(newUser.password !== newUser.confirmPassword) errors.confirmPassword = 'Passwords must match';
-  if (isEmpty(newUser.handle))
+  if(isEmpty(data.password)) errors.password = 'Must not be an empty password';
+  if(data.password !== data.confirmPassword) errors.confirmPassword = 'Passwords must match';
+  if (isEmpty(data.handle))
     errors.handle = "Must not be an empty handle";
 
   return {
